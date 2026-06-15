@@ -53,14 +53,13 @@
     const listA = ["alice", "bob"];
     const listB = ["charlie", "diana"];
     const listC = ["edward", "fiona"];
-    // Add more lists here if needed, e.g:
-    // const listD = ["george", "hannah"];
 
     // Combine all lists into one master list
     const allNames = [...listA, ...listB, ...listC];
 
     document.getElementById("check-btn").addEventListener("click", function() {
-      const input = document.getElementById("name-input").value.trim().toLowerCase();
+      const rawInput = document.getElementById("name-input").value.trim();
+      const input = rawInput.toLowerCase();
       const box = document.getElementById("message-box");
 
       if (input === "") {
@@ -72,8 +71,8 @@
         // Name IS on a list — ignore it, reset to default
         box.textContent = "Enter a name and click the button.";
       } else {
-        // Name is NOT on any list — display the entered name
-        box.textContent = input;
+        // Name is NOT on any list — display with original casing
+        box.textContent = rawInput;
       }
     });
   </script>
