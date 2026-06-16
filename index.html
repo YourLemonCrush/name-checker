@@ -66,9 +66,7 @@
       margin-bottom: 0;
     }
 
-    .spacer {
-      flex: 1;
-    }
+    .spacer { flex: 1; }
 
     #name-input {
       width: 100%;
@@ -107,60 +105,85 @@
       transition: background 0.15s;
     }
 
-    #upload-btn:active {
-      background: #e6c200;
-    }
+    #upload-btn:active { background: #e6c200; }
   </style>
 </head>
 <body>
 
   <div id="hashtag">#YourLemonCrush</div>
-
   <div id="current-name">Loading...</div>
   <div id="status-msg"></div>
-
   <div class="spacer"></div>
-
   <input type="text" id="name-input" placeholder="type the name of your crush..." />
   <button id="upload-btn">Upload</button>
 
 <script>
-  // *** PASTE YOUR FIREBASE REALTIME DATABASE URL HERE ***
-  const FIREBASE_URL = "https://my-crush-278a7-default-rtdb.asia-southeast1.firebasedatabase.app/";
+  const FIREBASE_URL = "https://my-crush-278a7-default-rtdb.asia-southeast1.firebasedatabase.app";
 
-  // *** EXACT MATCH LIST — names blocked entirely ***
-  const listA = ["faggot", "cunny", "diddy", "skank", "penis", "vag"];
+  // *** EXACT MATCH BLOCK LIST ***
+  const listA = ["faggot", "cunny", "cunni", "diddy", "skank", "penis", "vag"];
   const listB = ["s1ut", "hitler", "fa99ot", "fagg0t"];
   const listC = ["nazi", "hoe", "skank", "whore"];
   const allNames = [...listA, ...listB, ...listC];
 
-  // *** CONTAINS LIST — blocks if any of these appear anywhere in the input ***
+  // *** CONTAINS BLOCK LIST ***
   const blockedWords = [
-    "bitch",
-    "ass",
-    "cunt",
-    "fag",
-    "nazi",
-   "slut",
-    "lick", 
-    "fanny",
-    "dick",
-    "cock",
-    "chink",
-    "slant"
-    
+    "bitch", "ass", "cunt", "fag", "nazi", "slut", "wank", "jerk" 
+    "lick", "fanny", "dick", "cock", "chink", "slant" , "f4g" 
   ];
 
-  const nameDisplay = document.getElementById("current-name");
-  const statusMsg = document.getElementById("status-msg");
-  const input = document.getElementById("name-input");
-  const btn = document.getElementById("upload-btn");
+  // *** GOOD NAMES — cycled automatically when no submission for 5 minutes ***
+  const goodNames = [
+    "Sophie",
+    "Emma",
+    "Liam",
+    "Olivia",
+    "Noah",
+    "Ava",
+    "Jack",
+    "Isabella"
+    // Add as many as you like
+  ];
 
+  // How long to wait before cycling to next good name (milliseconds)
+  const CYCLE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+  const nameDisplay = document.getElementById("current-name");
+  const statusMsg   = document.getElementById("status-msg");
+  const input       = document.getElementById("name-input");
+  const btn         = document.getElementById("upload-btn");
+
+  let goodNameIndex = 0;
+  let cycleTimer = null;
+
+  // --- Filtering ---
   function containsBlockedWord(text) {
     const lower = text.toLowerCase();
     return blockedWords.some(word => lower.includes(word.toLowerCase()));
   }
 
+  // --- Good name cycling ---
+  function publishNextGoodName() {
+    const name = goodNames[goodNameIndex % goodNames.length];
+    goodNameIndex++;
+
+    fetch(`${FIREBASE_URL}/crush.json`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name, autoPosted: true, timestamp: Date.now() })
+    }).catch(() => {}); // Fail silently for auto-posts
+  }
+
+  function resetCycleTimer() {
+    // Clear any existing timer and start a fresh 5-minute countdown
+    if (cycleTimer) clearTimeout(cycleTimer);
+    cycleTimer = setTimeout(function tick() {
+      publishNextGoodName();
+      cycleTimer = setTimeout(tick, CYCLE_INTERVAL_MS);
+    }, CYCLE_INTERVAL_MS);
+  }
+
+  // --- Load current name from Firebase ---
   function loadCurrentName() {
     fetch(`${FIREBASE_URL}/crush.json`)
       .then(r => {
@@ -168,26 +191,48 @@
         return r.json();
       })
       .then(data => {
-        // Only update display once Firebase responds with real data
         if (data && data.name) {
           nameDisplay.textContent = data.name;
+
+          // If the stored name was a real user submission (not auto-posted),
+          // check how long ago it was posted and set the timer accordingly
+          if (!data.autoPosted && data.timestamp) {
+            const elapsed = Date.now() - data.timestamp;
+            const remaining = CYCLE_INTERVAL_MS - elapsed;
+            if (remaining > 0) {
+              // Still within the 5-minute window — wait out the remainder
+              if (cycleTimer) clearTimeout(cycleTimer);
+              cycleTimer = setTimeout(function tick() {
+                publishNextGoodName();
+                cycleTimer = setTimeout(tick, CYCLE_INTERVAL_MS);
+              }, remaining);
+            } else {
+              // Already overdue — cycle now
+              publishNextGoodName();
+              resetCycleTimer();
+            }
+          }
         } else {
           nameDisplay.textContent = "—";
         }
       })
       .catch(() => {
-        // If Firebase URL is wrong or unreachable, show a clear message
         nameDisplay.textContent = "—";
         statusMsg.style.color = "white";
         statusMsg.textContent = "Could not connect. Check Firebase URL.";
       });
   }
 
+  // Poll Firebase every 5 seconds to reflect changes on all devices
   loadCurrentName();
   setInterval(loadCurrentName, 5000);
 
+  // Start the cycle timer on page load
+  resetCycleTimer();
+
+  // --- Upload button ---
   btn.addEventListener("click", function () {
-    const rawInput = input.value.trim();
+    const rawInput  = input.value.trim();
     const lowerInput = rawInput.toLowerCase();
 
     statusMsg.style.color = "white";
@@ -198,46 +243,43 @@
       return;
     }
 
-    // Run ALL checks before anything is displayed or uploaded
     if (allNames.includes(lowerInput) || containsBlockedWord(rawInput)) {
       statusMsg.textContent = "That name is not available.";
       input.value = "";
       return;
     }
 
-    // Checks passed — disable button to prevent double-submissions
     btn.disabled = true;
     btn.textContent = "Uploading...";
 
     fetch(`${FIREBASE_URL}/crush.json`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: rawInput })
+      // Store timestamp so the cycle timer knows when to kick in
+      body: JSON.stringify({ name: rawInput, autoPosted: false, timestamp: Date.now() })
     })
       .then(r => {
         if (!r.ok) throw new Error("Upload failed");
         return r.json();
       })
       .then(() => {
-        // Only update the display AFTER Firebase confirms the write
         nameDisplay.textContent = rawInput;
         statusMsg.style.color = "#FFD700";
         statusMsg.textContent = "Uploaded!";
         input.value = "";
+        // Reset the 5-minute countdown from the moment of this submission
+        resetCycleTimer();
         setTimeout(() => statusMsg.textContent = "", 3000);
       })
       .catch(() => {
         statusMsg.textContent = "Upload failed. Please try again.";
       })
       .finally(() => {
-        // Re-enable button regardless of outcome
         btn.disabled = false;
         btn.textContent = "Upload";
       });
   });
 </script>
-
-  
 
 </body>
 </html>
