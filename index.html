@@ -2,79 +2,195 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Name Checker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>My Crush</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;900&display=swap" rel="stylesheet">
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      background: white;
+      font-family: 'Barlow', sans-serif;
+      min-height: 100vh;
+      background-image: url('background.jpg');
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      font-family: sans-serif;
-      gap: 20px;
+      padding: 60px 30px 40px;
     }
-    #message-box {
-      font-size: 20px;
-      padding: 15px 30px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      min-width: 300px;
+
+    #hashtag {
+      font-size: 42px;
+      font-weight: 900;
+      color: #FFD700;
+      text-align: left;
+      width: 100%;
+      max-width: 420px;
+      line-height: 1.1;
+      margin-bottom: 18px;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+    }
+
+    #current-name {
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      border: 3px solid white;
+      border-radius: 10px;
+      font-size: 36px;
+      font-weight: 700;
+      color: #111;
       text-align: center;
+      padding: 14px 20px;
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-family: 'Barlow', sans-serif;
     }
+
+    #status-msg {
+      font-size: 15px;
+      font-weight: 700;
+      color: white;
+      text-align: center;
+      min-height: 22px;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+      margin-bottom: 0;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+
     #name-input {
-      font-size: 16px;
-      padding: 10px 20px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      width: 280px;
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      border: 3px solid white;
+      border-radius: 10px;
+      font-size: 22px;
+      font-weight: 700;
+      color: #111;
+      padding: 16px 20px;
+      font-family: 'Barlow', sans-serif;
+      outline: none;
+      margin-bottom: 16px;
     }
-    #check-btn {
+
+    #name-input::placeholder {
+      color: #aaa;
+      font-weight: 700;
+    }
+
+    #upload-btn {
+      width: 60%;
+      max-width: 260px;
       background: #FFD700;
       border: none;
-      padding: 12px 40px;
-      font-size: 16px;
-      border-radius: 8px;
+      border-radius: 14px;
+      font-size: 32px;
+      font-weight: 900;
+      color: #111;
+      padding: 16px 20px;
       cursor: pointer;
-      font-weight: bold;
+      font-family: 'Barlow', sans-serif;
+      letter-spacing: 0.5px;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s;
     }
-    #check-btn:active {
+
+    #upload-btn:active {
       background: #e6c200;
     }
   </style>
 </head>
 <body>
-  <p id="message-box">Enter a name and click the button.</p>
-  <input type="text" id="name-input" placeholder="Type a name here..." />
-  <button id="check-btn">Check</button>
+
+  <div id="hashtag">#YourLemonCrush</div>
+
+  <div id="current-name">Loading...</div>
+  <div id="status-msg"></div>
+
+  <div class="spacer"></div>
+
+  <input type="text" id="name-input" placeholder="type the name of your crush..." />
+  <button id="upload-btn">Upload</button>
 
   <script>
-    // *** EDIT THESE LISTS with your actual names ***
-    const listA = ["alice", "bill"];
+    // *** PASTE YOUR FIREBASE REALTIME DATABASE URL HERE ***
+    const FIREBASE_URL = "https://my-crush-278a7-default-rtdb.asia-southeast1.firebasedatabase.app/";
+
+    // *** EDIT THESE LISTS with your actual names to block ***
+    const listA = ["alice", "bob"];
     const listB = ["charlie", "diana"];
     const listC = ["edward", "fiona"];
-
-    // Combine all lists into one master list
     const allNames = [...listA, ...listB, ...listC];
 
-    document.getElementById("check-btn").addEventListener("click", function() {
-      const rawInput = document.getElementById("name-input").value.trim();
-      const input = rawInput.toLowerCase();
-      const box = document.getElementById("message-box");
+    const nameDisplay = document.getElementById("current-name");
+    const statusMsg = document.getElementById("status-msg");
+    const input = document.getElementById("name-input");
 
-      if (input === "") {
-        box.textContent = "#YourLemonCrush";
+    // Load the current name from Firebase on page load
+    function loadCurrentName() {
+      fetch(`${FIREBASE_URL}/crush.json`)
+        .then(r => r.json())
+        .then(data => {
+          nameDisplay.textContent = data && data.name ? data.name : "—";
+        })
+        .catch(() => {
+          nameDisplay.textContent = "—";
+        });
+    }
+
+    // Poll Firebase every 5 seconds so the display stays live
+    loadCurrentName();
+    setInterval(loadCurrentName, 5000);
+
+    document.getElementById("upload-btn").addEventListener("click", function () {
+      const rawInput = input.value.trim();
+      const lowerInput = rawInput.toLowerCase();
+
+      statusMsg.style.color = "white";
+
+      if (rawInput === "") {
+        statusMsg.textContent = "Please type a name first.";
         return;
       }
 
-      if (allNames.includes(input)) {
-        // Name IS on a list — ignore it, reset to default
-        box.textContent = "Bob";
-      } else {
-        // Name is NOT on any list — display with original casing
-        box.textContent = rawInput;
+      if (allNames.includes(lowerInput)) {
+        statusMsg.textContent = "That name is not available.";
+        input.value = "";
+        return;
       }
+
+      // Name passed — upload to Firebase
+      fetch(`${FIREBASE_URL}/crush.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: rawInput })
+      })
+        .then(r => r.json())
+        .then(() => {
+          nameDisplay.textContent = rawInput;
+          statusMsg.style.color = "#FFD700";
+          statusMsg.textContent = "Uploaded!";
+          input.value = "";
+          setTimeout(() => statusMsg.textContent = "", 3000);
+        })
+        .catch(() => {
+          statusMsg.style.color = "white";
+          statusMsg.textContent = "Upload failed. Please try again.";
+        });
     });
   </script>
+
 </body>
 </html>
