@@ -50,7 +50,7 @@
 
   <script>
     // *** EDIT THESE LISTS with your actual names ***
-    const listA = ["alice", "bob"];
+    const listA = ["alice", "bill"];
     const listB = ["charlie", "diana"];
     const listC = ["edward", "fiona"];
 
@@ -63,13 +63,13 @@
       const box = document.getElementById("message-box");
 
       if (input === "") {
-        box.textContent = "Please enter a name.";
+        box.textContent = "#YourLemonCrush";
         return;
       }
 
       if (allNames.includes(input)) {
         // Name IS on a list — ignore it, reset to default
-        box.textContent = "Enter a name and click the button.";
+        box.textContent = "Bob";
       } else {
         // Name is NOT on any list — display with original casing
         box.textContent = rawInput;
