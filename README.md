@@ -1,2 +1,2 @@
-# name-checker
-check that name
+# Crush
+Crush that name
