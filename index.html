@@ -14,7 +14,9 @@
 
     body {
       font-family: 'Barlow', sans-serif;
-      min-height: 100vh;
+      height: 100vh;
+      max-height: 100vh;
+      overflow: hidden;
       background-image: url('background.jpg');
       background-size: cover;
       background-position: center top;
@@ -22,65 +24,78 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 60px 30px 40px;
+      justify-content: space-between;
+      padding: 48px 30px 28px;
+    }
+
+    /* ── Top section ── */
+    .top-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 420px;
+      gap: 14px;
     }
 
     #hashtag {
-      font-size: 42px;
+      font-size: 36px;
       font-weight: 900;
       color: #FFD700;
-      text-align: left;
+      text-align: center;
       width: 100%;
-      max-width: 420px;
       line-height: 1.1;
-      margin-bottom: 18px;
       text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+      white-space: nowrap;
     }
 
     #current-name {
       width: 100%;
-      max-width: 420px;
       background: white;
       border: 3px solid white;
       border-radius: 10px;
-      font-size: 36px;
+      font-size: 34px;
       font-weight: 700;
       color: #111;
       text-align: center;
-      padding: 14px 20px;
-      min-height: 70px;
+      padding: 12px 20px;
+      min-height: 66px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 20px;
       font-family: 'Barlow', sans-serif;
     }
 
     #status-msg {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
       color: white;
       text-align: center;
-      min-height: 22px;
+      min-height: 20px;
       text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-      margin-bottom: 0;
     }
 
-    .spacer { flex: 0.4; }
+    /* ── Bottom section ── */
+    .bottom-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 420px;
+      gap: 14px;
+    }
 
     #name-input {
       width: 100%;
-      max-width: 420px;
       background: white;
       border: 3px solid white;
       border-radius: 10px;
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 700;
       color: #111;
-      padding: 16px 20px;
+      padding: 14px 20px;
       font-family: 'Barlow', sans-serif;
       outline: none;
-      margin-bottom: 16px;
     }
 
     #name-input::placeholder {
@@ -94,10 +109,10 @@
       background: #FFD700;
       border: none;
       border-radius: 14px;
-      font-size: 32px;
+      font-size: 30px;
       font-weight: 900;
       color: #111;
-      padding: 16px 20px;
+      padding: 14px 20px;
       cursor: pointer;
       font-family: 'Barlow', sans-serif;
       letter-spacing: 0.5px;
@@ -106,16 +121,28 @@
     }
 
     #upload-btn:active { background: #e6c200; }
+
+    #logo {
+      width: 55%;
+      max-width: 200px;
+      object-fit: contain;
+      display: block;
+    }
   </style>
 </head>
 <body>
 
-  <div id="hashtag">#YourLemonCrush</div>
-  <div id="current-name">Loading...</div>
-  <div id="status-msg"></div>
-  <div class="spacer"></div>
-  <input type="text" id="name-input" placeholder="type the name of your crush..." />
-  <button id="upload-btn">Upload</button>
+  <div class="top-section">
+    <div id="hashtag">#YourNewCrush</div>
+    <div id="current-name">Loading...</div>
+    <div id="status-msg"></div>
+  </div>
+
+  <div class="bottom-section">
+    <input type="text" id="name-input" placeholder="type the name of your crush..." />
+    <button id="upload-btn">Upload</button>
+    <img id="logo" src="logoOverlay.png" alt="Logo" />
+  </div>
 
 <script>
   const FIREBASE_URL = "https://my-crush-278a7-default-rtdb.asia-southeast1.firebasedatabase.app";
@@ -129,26 +156,17 @@
   // *** CONTAINS BLOCK LIST ***
   const blockedWords = [
     "bitch", "nigger", "shit","nazi", "hoe", "skank", "whore", "d1ck", "cunt", "slut", "whore", "vagina", "cock" ,"dyke", "dike" ,"lezbo" ,"ass", "penis","arrse",  "arse", "cunt", "fag", "nazi","naz1", "pussy" , "slut", "wank", "jerk" , "blowjob","fatfucker", "boner", "bum", "butt"  , "dipshit" ,"peepee" ,"poopoo", "holestuffer", "massterb", "masterb", "master", "mastur",
-    "fuck", "lick", "fanny", "dick","d1ck", "cock", "chink", "slant" , "f4g" , "fa9", "anal", "bareback", "bastard", "boobie", "booby", "diaper", "gook", "hardcore", "jackoff", "kike", "kyke", "molest", "muff", "negro", "negr0", "negres", "niggar", "nigger" ,"niggah", "breast", 
-    "boob", "booob", "boooob", "booooob", "b00b", "b000b", "b0000b", "b00000b" , "breast" , "gay", "lesbian", "lezbian" ,"dildo" ,"dingleber", "golliwog", "goldenshower" , "fukah", "fuker", "fukkah", "fukker", "nigg", "orgasim", "terror", 
-    "bukake", "bukkake" ,"crotch", "creampie" ,"deepthroat" ,"doggiestyle" ,"douche" ,"doublepenetration", "ejaculat" ,"ejackulat" ,"fanny", "fart", "fcuk", "feltch" ,"fuktard", "goddam", "cammeltoe", "paedophile" , "peeenus" ,"pantie" ,"panty" 
+    "fuck", "lick", "fanny", "dick","d1ck", "cock", "chink", "slant" , "f4g" , "fa9", "anal", "bareback", "bastard", "boobie", "booby", "diaper", "gook", "hardcore", "jackoff", "kike", "kyke", "molest", "muff", "negro", "negr0", "negres", "niggar", "nigger" ,"niggah", "breast",
+    "boob", "booob", "boooob", "booooob", "b00b", "b000b", "b0000b", "b00000b" , "breast" , "gay", "lesbian", "lezbian" ,"dildo" ,"dingleber", "golliwog", "goldenshower" , "fukah", "fuker", "fukkah", "fukker", "nigg", "orgasim", "terror",
+    "bukake", "bukkake" ,"crotch", "creampie" ,"deepthroat" ,"doggiestyle" ,"douche" ,"doublepenetration", "ejaculat" ,"ejackulat" ,"fanny", "fart", "fcuk", "feltch" ,"fuktard", "goddam", "cammeltoe", "paedophile" , "peeenus" ,"pantie" ,"panty"
   ];
 
   // *** GOOD NAMES — cycled automatically when no submission for 5 minutes ***
   const goodNames = [
-    "Emma",
-    "Liam",
-    "Olivia",
-    "Noah",
-    "Ava",
-    "Jack",
-    "Charlotte",
-    "Morgan",
-    "Johnny"
+    "Emma", "Liam", "Olivia", "Noah", "Ava", "Jack", "Charlotte", "Morgan", "Johnny"
   ];
 
-  // How long to wait before cycling to next good name (milliseconds)
-  const CYCLE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+  const CYCLE_INTERVAL_MS = 5 * 60 * 1000;
 
   const nameDisplay = document.getElementById("current-name");
   const statusMsg   = document.getElementById("status-msg");
@@ -158,9 +176,7 @@
   let goodNameIndex = 0;
   let cycleTimer = null;
 
-  // --- Filtering ---
   function containsInvalidCharacters(text) {
-    // Only allow letters (a-z, A-Z) - block numbers, spaces, and special characters
     return /[^a-zA-Z]/.test(text);
   }
 
@@ -169,20 +185,17 @@
     return blockedWords.some(word => lower.includes(word.toLowerCase()));
   }
 
-  // --- Good name cycling ---
   function publishNextGoodName() {
     const name = goodNames[goodNameIndex % goodNames.length];
     goodNameIndex++;
-
     fetch(`${FIREBASE_URL}/crush.json`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: name, autoPosted: true, timestamp: Date.now() })
-    }).catch(() => {}); // Fail silently for auto-posts
+    }).catch(() => {});
   }
 
   function resetCycleTimer() {
-    // Clear any existing timer and start a fresh 5-minute countdown
     if (cycleTimer) clearTimeout(cycleTimer);
     cycleTimer = setTimeout(function tick() {
       publishNextGoodName();
@@ -190,7 +203,6 @@
     }, CYCLE_INTERVAL_MS);
   }
 
-  // --- Load current name from Firebase ---
   function loadCurrentName() {
     fetch(`${FIREBASE_URL}/crush.json`)
       .then(r => {
@@ -200,21 +212,16 @@
       .then(data => {
         if (data && data.name) {
           nameDisplay.textContent = data.name;
-
-          // If the stored name was a real user submission (not auto-posted),
-          // check how long ago it was posted and set the timer accordingly
           if (!data.autoPosted && data.timestamp) {
             const elapsed = Date.now() - data.timestamp;
             const remaining = CYCLE_INTERVAL_MS - elapsed;
+            if (cycleTimer) clearTimeout(cycleTimer);
             if (remaining > 0) {
-              // Still within the 5-minute window — wait out the remainder
-              if (cycleTimer) clearTimeout(cycleTimer);
               cycleTimer = setTimeout(function tick() {
                 publishNextGoodName();
                 cycleTimer = setTimeout(tick, CYCLE_INTERVAL_MS);
               }, remaining);
             } else {
-              // Already overdue — cycle now
               publishNextGoodName();
               resetCycleTimer();
             }
@@ -230,16 +237,12 @@
       });
   }
 
-  // Poll Firebase every 5 seconds to reflect changes on all devices
   loadCurrentName();
   setInterval(loadCurrentName, 5000);
-
-  // Start the cycle timer on page load
   resetCycleTimer();
 
-  // --- Upload button ---
   btn.addEventListener("click", function () {
-    const rawInput  = input.value.trim();
+    const rawInput   = input.value.trim();
     const lowerInput = rawInput.toLowerCase();
 
     statusMsg.style.color = "white";
@@ -251,7 +254,7 @@
     }
 
     if (containsInvalidCharacters(rawInput)) {
-      statusMsg.textContent = "Letters only, no numbers or spaces.";
+      statusMsg.textContent = "Letters only please.";
       input.value = "";
       return;
     }
@@ -268,7 +271,6 @@
     fetch(`${FIREBASE_URL}/crush.json`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      // Store timestamp so the cycle timer knows when to kick in
       body: JSON.stringify({ name: rawInput, autoPosted: false, timestamp: Date.now() })
     })
       .then(r => {
@@ -280,7 +282,6 @@
         statusMsg.style.color = "#FFD700";
         statusMsg.textContent = "Uploaded!";
         input.value = "";
-        // Reset the 5-minute countdown from the moment of this submission
         resetCycleTimer();
         setTimeout(() => statusMsg.textContent = "", 3000);
       })
